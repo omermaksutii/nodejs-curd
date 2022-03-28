@@ -17,6 +17,7 @@ import { sequelize} from './util/database';
 // Using `public` for static files: http://expressjs.com/en/starter/static-files.html
 app.use(express.static("public"));
 // Use bodyParser to parse application/x-www-form-urlencoded form data
+app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // add route
 app.use(router)
@@ -33,6 +34,6 @@ sequelize
     console.log("Unable to connect to database: ", err);
   });
 // Listen on port 8080
-var listener = app.listen(8088, function () {
+var listener = app.listen(8080, function () {
   console.log("Listening on port " + listener.address().port);
 });

@@ -4,86 +4,90 @@ interface IUser {
     lastName: string;
   }
 const getHome=(async (request:any, response:any)=> {
-    response.sendFile("/sandbox/public/index.html");
+  return response.sendFile("/sandbox/public/index.html");
   });
 
 const getInitdata=(async (req:any, res:any) => {
     await User.sync({ force: true }); // Force drop table if already exists
-  
-    const usersWrite = [
-      ["John", "Hancock"],
-      ["Liz", "Smith"],
-      ["Ahmed", "Khan"]
-    ];
-    await User.bulkCreate(
-      usersWrite.map(([firstName, lastName]) => ({ firstName, lastName }))
-    );
-  
-    res.send("Completed Data Initialization");
+    console.log(req.body)
+    const firstname=req.body.firstName
+    const lastname=req.body.lastName
+     await User.create({
+      firstName:firstname,
+      lastName:lastname
+  })
+  return res.json("Completed Data Initialization");
   });
 
  const getUsers=(async (req:any, res:any) => {
     await User.sync();
     const users = ((await User.findAll()) as any) as IUser[];
-    res.jsonp(users);
+    return res.json(users);
   });
 
-  const getDeleteuser=(async (req:any, res:any) => {
-    const first = req.params.first;
-    const last = req.params.last;
-    await User.sync();
+  const deleteUser=(async (req:any, res:any) => {
+    const userid=req.params.id
+    const existingUsers = await User.findOne({
+      where: {
+        _id:userid
+      }
+    });
+    if (!existingUsers) {
+      return res.json("User doesn't exist with this id");
+    } 
     await User.destroy({
       where: {
-        firstName: first,
-        lastName: last
+      _id:userid
       }
     });
-    res.send(`Deleted user ${first} ${last}`);
+    return res.json(`user with id ${userid} deleted`);
   });
 
-  const getAddUser=(async (req:any, res:any) => {
-    const first = req.params.first;
-    const last = req.params.last;
+  const addUser=(async (req:any, res:any) => {
     await User.sync();
-  
-    const existingUser = await User.findAll({
+    const firstname=req.body.firstName
+    const lastname=req.body.lastName
+    const existingUser = await User.findOne({
       where: {
-        firstName: first,
-        lastName: last
+        firstName: firstname,
+        lastName: lastname
       }
     });
-    if (existingUser && existingUser.length > 0) {
-      res.send("User already exists");
+    if (existingUser) {
+      return res.json("User already exists");
     } else {
       await User.create({
-        firstName: first,
-        lastName: last
-      });
-      res.send(`Created user ${first} ${last}`);
+        firstName:firstname,
+        lastName:lastname
+    })
+    return res.json(`Created user ${firstname} ${lastname}`);
     }
   });
-const getUpdateuser=(async (req:any, res:any) => {
-      const first = req.params.first;
-      const last = req.params.last;
-      const modifyFirst = req.params.modifyFirst;
-      const modifyLast = req.params.modifyLast;
-  
+const updateUser=(async (req:any, res:any) => {
+  const userid=req.params.id
+  const firstname=req.body.firstName
+  const lastname=req.body.lastName
       await User.sync();
-      const existingUsers = await User.findAll({
+      const existingUsers = await User.findOne({
         where: {
-          firstName: first,
-          lastName: last
+          _id:userid
         }
       });
-      if (!existingUsers || existingUsers.length === 0) {
-        res.send("User doesn't exisft");
-      } else {
-        const u = existingUsers[0];
-        u.firstName = modifyFirst;
-        u.lastName = modifyLast;
-        u.save();
+      console.log(existingUsers)
+      if (!existingUsers) {
+        return res.json("User doesn't exist with this id");
+      } 
+      else {
+          await User.update(
+          {
+            firstName: firstname,
+            lastName: lastname
+          },
+          { where: { _id: userid } })
+     
+      return res.json("user information updated!") 
       }
     }
   );  
 
-  export{getHome,getAddUser,getInitdata,getDeleteuser,getUpdateuser,getUsers}
+  export{getHome,addUser,getInitdata,deleteUser,updateUser,getUsers}
